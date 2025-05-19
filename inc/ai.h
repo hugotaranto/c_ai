@@ -4,45 +4,47 @@
 #include <math.h>
 #include <string.h>
 
-#ifndef AI_STUFF
-#define AI_STUFF
+#ifndef C_AI
+#define C_AI
 
-typedef struct Neuron Neuron;
+// typedef struct Neuron Neuron;
 typedef struct Network Network;
+typedef struct Layer Layer;
 
-struct Neuron {
+struct Layer {
+  double * neuron_values;
+  double * neuron_biases;
+  int num_neurons;
+  double *weights;
 
-  double value;
-  double bias;
-
-  Neuron *input_neurons;
-  double *input_weights; // if wanted to change double data type, need to change neuron initialisation function
-  int num_inputs;
-
+  Layer *output_layer;
+  int num_outputs;
 };
 
 struct Network {
-  // a network has an input layer
-  Neuron *inputs;
-  int num_inputs;
-  // and an output layer
-  Neuron *outputs;
-  int num_outputs;
-
-  // and hidden layers
-  Neuron **hidden_layers;
+  Layer *layers;
+  int num_layers;
   int num_hidden_layers;
-  int hidden_layer_length;
 
-  int num_connections;
+  Layer *inputs;
+  int num_inputs;
 
+  Layer *outputs;
+  int num_outputs;
 };
 
-void initialise_neuron(Neuron *neuron, int num_inputs, Neuron *input_neurons);
-int initialise_network(Network *network, int num_inputs, int num_outputs, int num_hidden_layers, int length_hidden_layers);
-void free_neuron(Neuron *neuron);
+int initialise_network(Network *network, int num_inputs, int num_outputs, int num_hidden_layers, int hidden_layer_length);
+void initialise_layer(Layer *layer, int num_neurons, Layer *output_layer);
+void free_layer(Layer *layer);
 void free_network(Network *network);
-double get_neuron_value(Neuron *neuron);
+
+void feed_forward(Layer *layer);
+void evaluate_network(Network *network);
+
+
+// -=-==-=-==-=-=-=-=-=-=--==--= DEBUGGING FUNCTIONS
+void print_output_layer_values(Network *network);
+
 
 #endif
 

@@ -1,129 +1,114 @@
 #include "ai.h"
+#include <cblas.h>
 
-void initialise_neuron(Neuron *neuron, int num_inputs, Neuron *input_neurons) {
+int initialise_network(Network *network, int num_inputs, int num_outputs, int num_hidden_layers, int hidden_layer_length) {
 
-  neuron->value = 0;
-  neuron->num_inputs = num_inputs;
-  neuron->input_neurons = input_neurons;
-
-  neuron->input_weights = malloc(sizeof(double) * num_inputs);
-
-  // randomise all of the initial weights? time for research
-  neuron->bias = 0;
-  
-  // for now just memset to 0
-  memset(neuron->input_weights, 0, sizeof(double) * neuron->num_inputs);
-
-}
-
-int initialise_network(Network *network, int num_inputs, int num_outputs, int num_hidden_layers, int length_hidden_layers) {
-
-  if(num_inputs <= 0 || num_outputs <= 0 || num_hidden_layers <= 0 || length_hidden_layers <= 0) {
-    return - 1;
+  if (num_inputs <= 0 || num_outputs <=0 || num_hidden_layers <=0 || hidden_layer_length <= 0) {
+    return -1;
   }
-  
+
+  network->num_layers = num_hidden_layers + 2;
+  network->num_hidden_layers = num_hidden_layers;
   network->num_inputs = num_inputs;
   network->num_outputs = num_outputs;
-  network->num_hidden_layers = num_hidden_layers;
-  network->hidden_layer_length = length_hidden_layers;
-  network->num_connections = 0;
 
-  network->inputs = malloc(sizeof(Neuron) * network->num_inputs);
-  network->outputs = malloc(sizeof(Neuron) * network->num_outputs);
-  network->hidden_layers = malloc(sizeof(Neuron*) * network->num_hidden_layers);
+  network->layers = malloc(sizeof(Layer) * network->num_layers); // allocate the hidden layers and input/output
+  network->inputs = &network->layers[0];
+  network->outputs = &network->layers[network->num_layers - 1];
 
-  for(int i = 0; i < network->num_hidden_layers; i++) {
-    network->hidden_layers[i] = malloc(sizeof(Neuron) * network->hidden_layer_length);
+  // now need to allocate each layer
+  // first do the outputs
+  initialise_layer(network->outputs, network->num_outputs, NULL);
+
+  // then do the hidden layers
+  for(int i = network->num_layers; i > 0; i--) {
+    initialise_layer(&network->layers[i], hidden_layer_length, &network->layers[i + 1]);
   }
 
-  // now all of the neurons need to be initialised
-
-  // input neurons don't need anything fancy done
-  for(int i = 0; i < network->num_inputs; i++) {
-    network->inputs[i].input_neurons = NULL;
-    network->inputs[i].input_weights = NULL;
-    network->inputs[i].num_inputs = 0;
-    network->inputs[i].value = 0;
-  }
-
-  // however, the rest do
-  for(int i = 0; i < network->num_outputs; i++) {
-    initialise_neuron(&network->outputs[i], network->hidden_layer_length, network->hidden_layers[network->num_hidden_layers - 1]);
-    network->num_connections += network->hidden_layer_length;
-  }
-
-  // initialise all of the neurons in the hidden layers
-  for(int i = 0; i < network->num_hidden_layers; i++) {
-    for(int j = 0; j < network->hidden_layer_length; j++) {
-      // if we are on the first hidden layer, the input neurons/weights are the input layer
-      if(i == 0) {
-        initialise_neuron(&network->hidden_layers[i][j], network->num_inputs, network->inputs);
-        network->num_connections += network->num_inputs;
-      } else { // otherwise they will be another hidden layer
-        initialise_neuron(&network->hidden_layers[i][j], network->hidden_layer_length, network->hidden_layers[i - 1]);
-        network->num_connections += network->hidden_layer_length;
-      }
-
-    }
-  }
+  // then the input layer
+  initialise_layer(network->inputs, network->num_inputs, &network->layers[1]);
 
   return 0;
-
 }
 
-void free_neuron(Neuron *neuron) {
 
-  if(neuron->input_weights != NULL) {
-    free(neuron->input_weights);
+void initialise_layer(Layer *layer, int num_neurons, Layer *output_layer) {
+
+  layer->num_neurons = num_neurons;
+  layer->neuron_values = malloc(sizeof(double) * layer->num_neurons);
+  layer->neuron_biases = malloc(sizeof(double) * layer->num_neurons);
+  layer->output_layer = output_layer;
+
+  memset(layer->neuron_values, 0, sizeof(double) * layer->num_neurons);
+  memset(layer->neuron_biases, 0, sizeof(double) * layer->num_neurons);
+
+  if (output_layer != NULL) {
+    layer->num_outputs = output_layer->num_neurons;
+    layer->weights = malloc(sizeof(double) * layer->num_outputs * layer->num_neurons);
+
+  } else {
+    layer->weights = NULL;
+    layer->num_outputs = 0;
   }
+}
 
+void free_layer(Layer *layer) {
+  free(layer->neuron_values);
+  free(layer->neuron_biases);
+  if(layer->weights != NULL) {
+    free(layer->weights);
+  }
 }
 
 void free_network(Network *network) {
-
-  // free the inputs
-  for(int i = 0; i < network->num_inputs; i++) {
-    free_neuron(&network->inputs[i]);
+  for(int i = 0; i < network->num_layers; i++) {
+    free_layer(&network->layers[i]);
   }
-  free(network->inputs);
-
-  // free the outputs
-  for(int i = 0; i < network->num_outputs; i++) {
-    free_neuron(&network->outputs[i]);
-  }
-  free(network->outputs);
-
-  // free all of the hidden neurons and layers
-  for(int i = 0; i < network->num_hidden_layers; i++) {
-    for(int j = 0; j < network->hidden_layer_length; j++) {
-      free_neuron(&network->hidden_layers[i][j]);
-    }
-    free(network->hidden_layers[i]);
-  }
-  free(network->hidden_layers); 
-
-  // finally free the network itself
+  free(network->layers);
   free(network);
 }
 
-double get_neuron_value(Neuron *neuron) {
+void feed_forward(Layer *layer) {
 
-  // find the weighted sum of all of the input neurons and weights
-  if (neuron->input_neurons == NULL || neuron->input_weights == NULL) {
-    // have to raise an error here
-    return 0.0;
+  // do a matrix multiplication using cblas (fast)
+  int rows = layer->num_outputs; // M
+  int columns = layer->num_neurons; // K
+
+  double *output_matrix;
+  output_matrix = malloc(sizeof(double) * layer->num_outputs);
+  
+  cblas_dgemm(
+    CblasColMajor, CblasNoTrans, CblasNoTrans,
+    rows, 1, columns, // M, N, K
+    1.0,
+    layer->weights, rows,
+    layer->output_layer->neuron_values, columns,
+    0.0,
+    output_matrix, rows
+  );
+
+  // then add the bias and update the output values
+  for(int i = 0; i < layer->num_outputs; i++) {
+    layer->output_layer->neuron_values[i] = 1 / (1 + exp(-output_matrix[i] + layer->output_layer->neuron_biases[i]));
   }
 
-  double weighted_sum = 0;
+  free(output_matrix);
+}
 
-  for(int i = 0; i < neuron->num_inputs; i++) {
-    weighted_sum += neuron->input_weights[i] * neuron->input_neurons[i].value;
+void evaluate_network(Network *network) {
+  for(int i = 0; i < network->num_layers - 1; i++) {
+    feed_forward(&network->layers[i]);
   }
+}
 
-  // then get the sigma of this to scale it between 1 and 0
-  double sigma = 1 / (1 + exp(-weighted_sum + neuron->bias));
-  return sigma;
 
-};
 
+// -=-==-=-==-=-=-=-=-=-=--==--= DEBUGGING FUNCTIONS
+void print_output_layer_values(Network *network) {
+  printf("[");
+  for(int i = 0; i < network->num_outputs - 1; i++) {
+    printf(" %f, ", network->outputs->neuron_values[i]);
+  }
+  printf(" %f]\n", network->outputs->neuron_values[network->num_outputs - 1]);
+}
 
