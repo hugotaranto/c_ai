@@ -22,6 +22,9 @@ link_directories(${OPENBLAS_LIBRARY_DIRS})
 
 find_library(OPENBLAS_LIB NAMES openblas PATHS /opt/homebrew/Cellar/openblas/0.3.29/lib)
 
-# target_link_libraries(proj PRIVATE ${BLAS_LIB})
 target_link_libraries(proj PRIVATE ${OPENBLAS_LIB})
+
+# enable address sanitizer
+target_compile_options(proj PRIVATE -fsanitize=address)
+target_link_options(proj PRIVATE -fsanitize=address)
 

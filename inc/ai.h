@@ -1,15 +1,17 @@
+#ifndef C_AI
+#define C_AI
+
 #include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
 #include <string.h>
 
-#ifndef C_AI
-#define C_AI
-
 // typedef struct Neuron Neuron;
 typedef struct Network Network;
 typedef struct Layer Layer;
+typedef struct CostMap CostMap;
+typedef struct CostMapLayer CostMapLayer;
 
 struct Layer {
   double * neuron_values;
@@ -19,12 +21,18 @@ struct Layer {
 
   Layer *output_layer;
   int num_outputs;
+
+  Layer *input_layer;
+  int num_inputs;
+
+  double **ordered_weights; // [num_outputs][num_neurons] -- weights stored for the next layer
 };
 
 struct Network {
   Layer *layers;
   int num_layers;
   int num_hidden_layers;
+  int hidden_layer_length;
 
   Layer *inputs;
   int num_inputs;
@@ -33,14 +41,55 @@ struct Network {
   int num_outputs;
 };
 
+struct CostMap {
+  int num_iterations;
+  double cumulative_cost;
+
+  int num_layers;
+  int num_inputs;
+  int num_outputs;
+  int hidden_layer_length;
+
+  CostMapLayer *layers;
+
+};
+
+struct CostMapLayer {
+  int num_neurons;
+  int num_outputs;
+  double *weights;
+  double **ordered_weights;
+  double *biases;
+
+  // need to keep track of the partial derivatives
+  double *cost_derivative_of_values;
+  double *dadz;
+
+};
+
+//------------------------------------------------------------------------------------------------------------------------
+// NetWork Functions
 int initialise_network(Network *network, int num_inputs, int num_outputs, int num_hidden_layers, int hidden_layer_length);
-void initialise_layer(Layer *layer, int num_neurons, Layer *output_layer);
+void initialise_layer(Layer *layer, int num_neurons, Layer *input_layer, Layer *output_layer);
 void free_layer(Layer *layer);
 void free_network(Network *network);
 
 void feed_forward(Layer *layer);
 void evaluate_network(Network *network);
 
+//------------------------------------------------------------------------------------------------------------------------
+// Training Functions
+double get_cost_funtion(Network *network, double *expected);
+void back_propogate(Network *network, double *expected, CostMap *costmap);
+
+void initialise_cost_map(CostMap *costmap, Network* network);
+void free_cost_map(CostMap *costmap);
+void initialise_cost_map_layer(CostMapLayer *layer, int num_neurons, int num_outputs);
+void free_cost_map_layer(CostMapLayer *layer);
+
+int apply_cost_map(Network *network, CostMap *costmap, double learning_rate);
+
+void gradient_descent_train(Network *network, double **inputs, double **expected_outputs, int num_inputs);
 
 // -=-==-=-==-=-=-=-=-=-=--==--= DEBUGGING FUNCTIONS
 void print_output_layer_values(Network *network);
