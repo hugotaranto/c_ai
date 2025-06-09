@@ -203,7 +203,6 @@ void back_propogate(Network *network, double *expected, CostMap *costmap) {
 }
 
 
-
 int apply_cost_map(Network *network, CostMap *costmap, double learning_rate) {
   // here the costmap needs to be applied to the network
   if (learning_rate <= 0) {
@@ -552,6 +551,4 @@ void print_costmap_gradients(CostMap *costmap) {
   }
 
 }
-
-
 
