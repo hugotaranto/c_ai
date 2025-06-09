@@ -267,8 +267,6 @@ void gradient_descent_train(Network *network, double **inputs, double **expected
 }
 
 
-
-
 void initialise_cost_map(CostMap *costmap, Network *network) {
 
   costmap->num_iterations = 0;
@@ -342,6 +340,130 @@ void free_cost_map_layer(CostMapLayer *layer) {
   }
 }
 
+void save_network_to_file(Network *network) {
+
+  char filename[256];
+  printf("Enter path and filename to save. (e.g. ../network): ");
+  scanf("%255s", filename);  // avoid buffer overflow
+
+  // Combine with current directory (optional)
+  char fullpath[512];
+  snprintf(fullpath, sizeof(fullpath), "./%s.nn", filename); // saves in current folder
+
+  FILE *file = fopen(fullpath, "wb");
+  if (file == NULL) {
+    perror("Failed to open file");
+    return;
+  }
+
+  // save metadata
+  fwrite(&network->num_layers, sizeof(int), 1, file);
+  fwrite(&network->num_hidden_layers, sizeof(int), 1, file);
+  fwrite(&network->hidden_layer_length, sizeof(int), 1, file);
+  fwrite(&network->num_inputs, sizeof(int), 1, file);
+  fwrite(&network->num_outputs, sizeof(int), 1, file);
+
+  // save each of the layers
+  for(int i = 0; i < network->num_layers; i++) {
+
+    Layer *layer = &network->layers[i];
+
+    // write the metadata for the layer
+    fwrite(&layer->num_neurons, sizeof(int), 1, file);
+    fwrite(&layer->num_outputs, sizeof(int), 1, file);
+    fwrite(&layer->num_inputs, sizeof(int), 1, file);
+
+    // write the biases
+    fwrite(layer->neuron_biases, sizeof(double), layer->num_neurons, file);
+
+    // write the weights
+    if(layer->num_outputs > 0) {
+      fwrite(layer->weights, sizeof(double), layer->num_neurons * layer->num_outputs, file);
+    }
+
+  }
+
+  fclose(file);
+  printf("File saved successfully to: %s\n", fullpath);
+}
+
+Network* load_network_from_file() {
+
+  char filename[256];
+  printf("Enter path and filename to load (DO NOT INCLUDE '.nn'). (e.g. ../network): ");
+  scanf("%255s", filename);  // avoid buffer overflow
+
+  // Combine with current directory (optional)
+  char fullpath[512];
+  snprintf(fullpath, sizeof(fullpath), "./%s.nn", filename); // saves in current folder
+
+  FILE *file = fopen(fullpath, "rb");
+  if (!file) {
+    perror("Failed to open file");
+    return NULL;
+  }
+
+  Network *network = malloc(sizeof(Network));
+  if (!network) {
+    perror("Network Allocation Failed");
+    fclose(file);
+    return NULL;
+  }
+
+  int num_layers, num_hidden_layers, hidden_layer_length, num_inputs, num_outputs;
+
+  // read the network metadata
+  fread(&num_layers, sizeof(int), 1, file);
+  fread(&num_hidden_layers, sizeof(int), 1, file);
+  fread(&hidden_layer_length, sizeof(int), 1, file);
+  fread(&num_inputs, sizeof(int), 1, file);
+  fread(&num_outputs, sizeof(int), 1, file);
+
+  if (initialise_network(network, num_inputs, num_outputs, num_hidden_layers, hidden_layer_length)) {
+    perror("Network Initilisation Failed");
+    fclose(file);
+    return NULL;
+  }
+
+  // now we just need to read in the layer data:
+  for (int i = 0; i < network->num_layers; i++) {
+    Layer *layer = &network->layers[i];
+
+    int num_neurons, num_outputs, num_inputs;
+    fread(&num_neurons, sizeof(int), 1, file);
+    fread(&num_outputs, sizeof(int), 1, file);
+    fread(&num_inputs, sizeof(int), 1, file);
+
+    if(num_neurons != layer->num_neurons) {
+      fprintf(stderr, "Number of Neurons in Layer %d Does not match saved data\n", i);
+      fclose(file);
+      return NULL;
+    }
+    if(num_outputs != layer->num_outputs) {
+      fprintf(stderr, "Number of Outputs in Layer %d Does not match saved data\n", i);
+      fclose(file);
+      return NULL;
+    }
+    if(num_inputs != layer->num_inputs) {
+      fprintf(stderr, "Number of Inputs in Layer %d Does not match saved data\n", i);
+      fclose(file);
+      return NULL;
+    }
+
+    // load the biases
+    fread(layer->neuron_biases, sizeof(double), layer->num_neurons, file);
+
+    // load the weights if this is not an ouput layer
+    if (layer->num_outputs > 0) {
+      int num_weights = layer->num_outputs * layer->num_neurons;
+      fread(layer->weights, sizeof(double), num_weights, file);
+    }
+  }
+
+  fclose(file);
+  printf("Successfully read Network From %s\n", fullpath);
+  return network;
+}
 
 // -=-==-=-==-=-=-=-=-=-=--==--= DEBUGGING FUNCTIONS
 void print_output_layer_values(Network *network) {

@@ -91,6 +91,12 @@ int apply_cost_map(Network *network, CostMap *costmap, double learning_rate);
 
 void gradient_descent_train(Network *network, double **inputs, double **expected_outputs, int num_inputs, double learning_rate);
 
+//------------------------------------------------------------------------------------------------------------------------
+// Global Functions
+void save_network_to_file(Network *network);
+Network* load_network_from_file();
+
+
 // -=-==-=-==-=-=-=-=-=-=--==--= DEBUGGING FUNCTIONS
 void print_output_layer_values(Network *network);
 
