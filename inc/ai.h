@@ -63,7 +63,7 @@ struct CostMapLayer {
 
   // need to keep track of the partial derivatives
   double *cost_derivative_of_values;
-  double *dadz;
+  double *dvdz;
 
 };
 

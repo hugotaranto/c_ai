@@ -1,5 +1,7 @@
 #include "ai.h"
 #include <cblas.h>
+#include <time.h>
+#include <math.h>
 
 int initialise_network(Network *network, int num_inputs, int num_outputs, int num_hidden_layers, int hidden_layer_length) {
 
@@ -41,8 +43,10 @@ void initialise_layer(Layer *layer, int num_neurons, Layer *input_layer, Layer *
   layer->output_layer = output_layer;
   layer->input_layer = input_layer;
 
-  memset(layer->neuron_values, 0, sizeof(double) * layer->num_neurons);
-  memset(layer->neuron_biases, 0, sizeof(double) * layer->num_neurons);
+  // randomise the biases
+  for(int i = 0; i < num_neurons; i++) {
+    layer->neuron_biases[i] = drand48() -0.5; // between [-0.5, 0.5]
+  }
 
   if (output_layer != NULL) {
     layer->num_outputs = output_layer->num_neurons;
@@ -51,6 +55,10 @@ void initialise_layer(Layer *layer, int num_neurons, Layer *input_layer, Layer *
 
     for(int i = 0; i < layer->num_outputs; i++) {
       layer->ordered_weights[i] = &layer->weights[i * layer->num_neurons];
+      for(int j = 0; j < num_neurons; j++) {
+        double limit = 1.0 / sqrt((double) num_neurons);
+        layer->ordered_weights[i][j] = (drand48() * 2 * limit) - limit;
+      }
     }
 
   } else {
@@ -79,6 +87,7 @@ void free_network(Network *network) {
   free(network);
 }
 
+
 void feed_forward(Layer *layer) {
 
   // do a matrix multiplication using cblas (fast)
@@ -88,18 +97,6 @@ void feed_forward(Layer *layer) {
   double *output_matrix;
   output_matrix = malloc(sizeof(double) * layer->num_outputs);
   
-  // quick matrix multiplication of the weights and values
-  // cblas_dgemm(
-  //   CblasRowMajor, CblasNoTrans, CblasNoTrans,
-  //   rows, 1, columns, // M, N, K
-  //   1.0,
-  //   layer->weights, rows,
-  //   // layer->output_layer->neuron_values, columns,
-  //   layer->neuron_values, columns,
-  //   0.0,
-  //   output_matrix, rows
-  // );
-
   cblas_dgemm(
     CblasRowMajor,
     CblasNoTrans,
@@ -144,103 +141,67 @@ double get_cost_funtion(Network *network, double *expected) {
 
 void back_propogate(Network *network, double *expected, CostMap *costmap) {
 
+  // update the stored number of iterations and the cost
   costmap->num_iterations += 1;
   costmap->cumulative_cost += get_cost_funtion(network, expected);
 
-  // CostMap *costmap;
-  // costmap = malloc(sizeof(CostMap));
-  // initialise_cost_map(costmap, network);
-  
-  // get all of the values for the costmap
+  // work backwards through the layers:
+  for(int i = network->num_layers - 1; i >= 0; i--) {
 
-  // doing the back propogation gives the gradients of all of the parameters of the neural network
-  // start at the outputs
-  
-  // to find the gradient, we need to find the derivative of all parameters relative to the cost
+    Layer network_layer = network->layers[i];
+    CostMapLayer costmap_layer = costmap->layers[i];
+    Layer *output_layer = network_layer.output_layer;
 
-  // start from the output layer
-  // how much do we need to change the weights and biases of the previous layer to effect the output and therefore cost?
+    // loop through all of the neurons in that layer
+    for(int j = 0; j < network_layer.num_neurons; j++) {
 
-  // for the weights:
+      double neuron_value = network_layer.neuron_values[j];
 
-  // 3b1b backpropogation DL4 : https://www.youtube.com/watch?v=tIeHLnjs5U8&ab_channel=3Blue1Brown
-  // 4:10
+      double cost_value_derivative = 0;
 
-  // double neuron_value = network->outputs->neuron_values[0];
-  // // effect of the cost with respect to the value of the output neurons:
-  // double dcdal = 2 * (neuron_value - expected[0]);
-  //
-  // // effect of the value of the output neuron with respect to z
-  // // derivative of "squishing" function 1/(1 + exp(-z)) = (exp(-x))/(1 + exp(-x))^2 = neuron_value (1 - neuron_value)
-  // double dadz = neuron_value * (1 - neuron_value);
-  //
-  // // effect of the value of the z value with respect to the weight
-  // double dzdw = network->layers[network->num_layers - 2].neuron_values[0];
-  //
-  // double dcdw0 = dcdal * dadz * dzdw;
+      // base case for output layer:
+      if(i == network->num_layers - 1) {
 
-  // so then to do this for all of the weights at a given neuron:
-  // dcdal stays the same
-  // dadz stays the same
-  // dzdw changes
+        // the derivative of this value to the cost is the derivative of the cost function at each point
+        // i.e. the cost function is sum(y - y_expected)^2 -- so the derivative is 2 (y - y_expected)
+        cost_value_derivative = 2 * (neuron_value - expected[j]);
+        // then these just need to be stored for back propagating to the hidden layers:
 
-  // work backwards through the layers
-  for(int i = network->num_layers - 1; i >= 1; i--) {
+      } else {
 
-    Layer layer = network->layers[i];
-    Layer *input_layer =  layer.input_layer;
-    Layer *output_layer = layer.output_layer;
 
-    // work through all of the neurons in the layer
-    for(int j = 0; j < layer.num_neurons; j++) {
-
-      // I believe that all of these values have to be saved for use in the next layers in the chain rule
-      
-      double neuron_value = layer.neuron_values[j];
-
-      // effect of the value of the output neuron with respect to z
-      double dadz = neuron_value * (1 - neuron_value);
-      // store this value
-      costmap->layers[i].dadz[j] = dadz;
-
-      double dcdal;
-
-      if (i == network->num_layers - 1) {
-        // effect of the cost with respect to the value of the output neurons
-        dcdal = 2 * (neuron_value - expected[0]); // base case for the outut layer
-
-      } else { // this gets propogated through in other cases
-
-        // find the effect of the current value on the next value i.e. weight and multiply by dcdal of next value
-        // however this is done by the sum over the next layer as this neuron effects the cost through all of the output neurons
-        dcdal = 0;
+        // need to loop through all of the L + 1 (next layer neurrons)
         for(int k = 0; k < output_layer->num_neurons; k++) {
-          dcdal += layer.ordered_weights[k][j] * costmap->layers[i + 1].cost_derivative_of_values[k] * costmap->layers[i + 1].dadz[k];
+          // this is L + 1 (L)
+          double forward_value_derivative = costmap->layers[i + 1].cost_derivative_of_values[k];
+          double forward_value_z_derivative = output_layer->neuron_values[k] * (1 - output_layer->neuron_values[k]);
+          double weight_between_neurons = network_layer.ordered_weights[k][j];
+          cost_value_derivative += forward_value_derivative * forward_value_z_derivative * weight_between_neurons;
+        }
+
+        // the weight derivative can then be calculated
+        // loop through all of the output neurons
+        for(int k = 0; k < output_layer->num_neurons; k++) {
+          double output_neuron_value = network_layer.output_layer->neuron_values[k];
+          double sigmoid_output_neuron_derivative = output_neuron_value * (1 - output_neuron_value);
+          double weight_derivative = neuron_value * sigmoid_output_neuron_derivative * costmap->layers[i + 1].cost_derivative_of_values[k];
+          costmap_layer.ordered_weights[k][j] += weight_derivative;
         }
       }
-      // store this value
-      costmap->layers[i].cost_derivative_of_values[j] = dcdal;
 
-      // multiply these together
-      double temp = dcdal * dadz;
+      costmap_layer.cost_derivative_of_values[j] = cost_value_derivative;
 
-      // go through all of the weights for this neuron
-      for(int k = 0; k < input_layer->num_neurons; k++) {
-        // effect of the value of the z value with respect to the weight
-        double dzdw = layer.input_layer->neuron_values[k];
-        double dcdw = temp * dzdw;
+      // the bias for the current neuron can be calculated
+      double sigmoid_derivative = neuron_value * (1 - neuron_value);
+      double bias_derivative = sigmoid_derivative * cost_value_derivative;
+      costmap_layer.biases[j] += bias_derivative;
 
-        // then put this into the cost map in its relative position
-        costmap->layers[i - 1].ordered_weights[j][k] += dcdw; 
-      }
-
-      // the bias for this neuron is just temp
-      costmap->layers[i].biases[j] += temp;
     }
 
   }
 
 }
+
 
 
 int apply_cost_map(Network *network, CostMap *costmap, double learning_rate) {
@@ -251,30 +212,61 @@ int apply_cost_map(Network *network, CostMap *costmap, double learning_rate) {
 
   // loop through all of the layers in the network
   for(int i = 0; i < network->num_layers; i++) {
-    Layer network_layer = network->layers[i];
-    CostMapLayer costmap_layer = costmap->layers[i];
+    Layer *network_layer = &network->layers[i];
+    CostMapLayer *costmap_layer = &costmap->layers[i];
 
     // the scalar mult should take into account the numer of iterations taken in back propogation to get the average
     double scalar = -learning_rate / costmap->num_iterations; 
 
     // perform fast matrix action, all this does is make w_i = w_i - learning_rate * weight_gradients_i
-    cblas_daxpy(network_layer.num_outputs * network_layer.num_neurons, 
-                -scalar,
-                costmap_layer.weights, 1,
-                network_layer.weights, 1 
+    cblas_daxpy(network_layer->num_outputs * network_layer->num_neurons, 
+                scalar,
+                costmap_layer->weights, 1,
+                network_layer->weights, 1 
     );
 
     // then do the same for the bias
-    cblas_daxpy(network_layer.num_neurons,
-                -scalar,
-                costmap_layer.biases, 1,
-                network_layer.neuron_biases, 1
+    cblas_daxpy(network_layer->num_neurons,
+                scalar,
+                costmap_layer->biases, 1,
+                network_layer->neuron_biases, 1
     );
 
   }
 
   return 0;
 }
+
+
+void gradient_descent_train(Network *network, double **inputs, double **expected_outputs, int num_inputs) {
+
+  // create the cost map by back propogating over all of the inputs and outputs
+  // first create a cost map
+  CostMap *costmap = malloc(sizeof(CostMap));
+  initialise_cost_map(costmap, network);
+
+  // loop over all of the inputs
+  for(int i = 0; i < num_inputs; i++) {
+    // run the network for the given input
+    // put in all of the inputs
+    memcpy(network->inputs->neuron_values, inputs[i], sizeof(double) * network->num_inputs);
+    // then evaluate the network
+    evaluate_network(network);
+
+    // we can then back propogate to train
+    back_propogate(network, expected_outputs[i], costmap);
+  }
+
+  printf("cost function average: %f\n", costmap->cumulative_cost / costmap->num_iterations);
+
+  // after training over all of these inputs, the costmap can be applied to the network
+  apply_cost_map(network, costmap, 0.1); // TODO make learning rate variable
+
+  // remove the costmap now that we are done
+  free_cost_map(costmap);
+}
+
+
 
 
 void initialise_cost_map(CostMap *costmap, Network *network) {
@@ -334,7 +326,7 @@ void initialise_cost_map_layer(CostMapLayer *layer, int num_neurons, int num_out
   // also very important that these start as 0
   memset(layer->biases, 0, sizeof(double) * num_neurons);
   layer->cost_derivative_of_values = malloc(sizeof(double) * num_neurons);
-  layer->dadz = malloc(sizeof(double) * num_neurons);
+  layer->dvdz = malloc(sizeof(double) * num_neurons);
 }
 
 void free_cost_map_layer(CostMapLayer *layer) {
@@ -351,35 +343,6 @@ void free_cost_map_layer(CostMapLayer *layer) {
 }
 
 
-void gradient_descent_train(Network *network, double **inputs, double **expected_outputs, int num_inputs) {
-
-  // create the cost map by back propogating over all of the inputs and outputs
-  // first create a cost map
-  CostMap *costmap = malloc(sizeof(CostMap));
-  initialise_cost_map(costmap, network);
-
-  // loop over all of the inputs
-  for(int i = 0; i < num_inputs; i++) {
-    // run the network for the given input
-    // put in all of the inputs
-    memcpy(network->inputs->neuron_values, inputs[i], sizeof(double) * network->num_inputs);
-    // then evaluate the network
-    evaluate_network(network);
-
-    // we can then back propogate to train
-    back_propogate(network, expected_outputs[i], costmap);
-  }
-
-  printf("cost function average: %f\n", costmap->cumulative_cost / costmap->num_iterations);
-
-  // after training over all of these inputs, the costmap can be applied to the network
-  apply_cost_map(network, costmap, 0.5); // TODO make learning rate variable
-
-  // remove the costmap now that we are done
-  free_cost_map(costmap);
-}
-
-
 // -=-==-=-==-=-=-=-=-=-=--==--= DEBUGGING FUNCTIONS
 void print_output_layer_values(Network *network) {
   printf("[");
@@ -390,6 +353,83 @@ void print_output_layer_values(Network *network) {
 }
 
 
+// Unfinished functions for testing - (fixed back prop before I had to test)
+void make_back_prop_testcase() {
+
+
+  Network *test_network = malloc(sizeof(Network));
+  initialise_network(test_network, 1, 1, 1, 1);
+
+
+  printf("setting up the inputs and outputs\n");
+  // set up the inputs and outputs
+  double **input = malloc(sizeof(double*));
+  double **expected_output = malloc(sizeof(double*));
+
+  input[0] = malloc(sizeof(double));
+  expected_output[0] = malloc(sizeof(double));
+
+  input[0][0] = 1;
+  expected_output[0][0] = 0;
+
+  printf("about to set weights and biases\n");
+
+  // initialise the weights and biases of the network
+  test_network->layers[0].ordered_weights[0][0] = 0.5;
+  test_network->layers[1].ordered_weights[0][0] = 0.2;
+
+  test_network->layers[1].neuron_biases[0] = 0.3;
+  test_network->layers[2].neuron_biases[0] = 0.7;
+
+  printf("evaluating\n");
+
+  // set the input value
+  test_network->inputs->neuron_values[0] = 1;
+  // the evaluation can then be run
+  evaluate_network(test_network);
+
+  printf("Output Value: ");
+  print_output_layer_values(test_network);
+
+  //print the error
+  printf("Error/Loss thingo with expected value 0: %f\n", get_cost_funtion(test_network, expected_output[0]));
+
+  // now the tricky bit, testing the gradient descent
+  CostMap *costmap = malloc(sizeof(CostMap));
+  initialise_cost_map(costmap, test_network);
+
+  back_propogate(test_network, expected_output[0], costmap);
+
+  // print out the costmap
+
+  free(input[0]);
+  free(expected_output[0]);
+  free(input);
+  free(expected_output);
+
+  free_network(test_network); 
+
+}
+
+
+void print_costmap_gradients(CostMap *costmap) {
+
+  printf("Input Layer:\n");
+  printf("Weights:\n");
+  for(int i = 0; i < costmap->num_inputs; i++) {
+    for(int k = 0; k < costmap->layers[1].num_neurons; k++) {
+      printf("ordered_weights[%d][%d] = %f\n", k, i, costmap->layers[0].ordered_weights[k][i]);
+    }
+  }
+
+  for(int layer = 1; layer < costmap->num_layers - 2; layer++) {
+
+    printf("Hidden Layer %d\n", layer);
+    printf("Biases:\n");
+
+  }
+
+}
 
 
 
