@@ -238,7 +238,7 @@ int apply_cost_map(Network *network, CostMap *costmap, double learning_rate) {
 }
 
 
-void gradient_descent_train(Network *network, double **inputs, double **expected_outputs, int num_inputs) {
+void gradient_descent_train(Network *network, double **inputs, double **expected_outputs, int num_inputs, double learning_rate) {
 
   // create the cost map by back propogating over all of the inputs and outputs
   // first create a cost map
@@ -260,7 +260,7 @@ void gradient_descent_train(Network *network, double **inputs, double **expected
   printf("cost function average: %f\n", costmap->cumulative_cost / costmap->num_iterations);
 
   // after training over all of these inputs, the costmap can be applied to the network
-  apply_cost_map(network, costmap, 0.1); // TODO make learning rate variable
+  apply_cost_map(network, costmap, learning_rate); // TODO make learning rate variable
 
   // remove the costmap now that we are done
   free_cost_map(costmap);
