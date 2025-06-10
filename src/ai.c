@@ -43,6 +43,10 @@ void initialise_layer(Layer *layer, int num_neurons, Layer *input_layer, Layer *
   layer->output_layer = output_layer;
   layer->input_layer = input_layer;
 
+  if (input_layer == NULL) {
+    layer->num_inputs = 0;
+  }
+
   // randomise the biases
   for(int i = 0; i < num_neurons; i++) {
     layer->neuron_biases[i] = drand48() -0.5; // between [-0.5, 0.5]
@@ -60,6 +64,9 @@ void initialise_layer(Layer *layer, int num_neurons, Layer *input_layer, Layer *
         layer->ordered_weights[i][j] = (drand48() * 2 * limit) - limit;
       }
     }
+
+    // set the number of inputs for the next layer
+    output_layer->num_inputs = num_neurons;
 
   } else {
     layer->weights = NULL;
@@ -266,9 +273,9 @@ void gradient_descent_train(Network *network, double **inputs, double **expected
 }
 
 
-int stochastic_gradient_descent_train(Network *network, NetworkTestData *test_data, int batch_size, int epoch_count, double learning_rate) {
+int stochastic_gradient_descent_train(Network *network, NetworkTrainingData *training_data, int batch_size, int epoch_count, double learning_rate) {
 
-  if (batch_size > test_data->num_data_points) {
+  if (batch_size > training_data->num_data_points) {
     perror("Batch Size Bigger Than Data Set");
     return -1;
   }
@@ -282,12 +289,12 @@ int stochastic_gradient_descent_train(Network *network, NetworkTestData *test_da
   // then repeat for the number of epochs
   
   // make the indice array
-  int *indices = malloc(sizeof(int) * test_data->num_data_points);
-  for(int i = 0; i < test_data->num_data_points; i++) {
+  int *indices = malloc(sizeof(int) * training_data->num_data_points);
+  for(int i = 0; i < training_data->num_data_points; i++) {
     indices[i] = i;
   }
 
-  int batches_per_epoch = test_data->num_data_points / batch_size;
+  int batches_per_epoch = training_data->num_data_points / batch_size;
 
   // create the costmap
   CostMap *costmap = malloc(sizeof(CostMap));
@@ -296,7 +303,7 @@ int stochastic_gradient_descent_train(Network *network, NetworkTestData *test_da
   // then loop through the number of epochs
   for(int i = 0; i < epoch_count; i++) {
     // shuffle the indices
-    shuffle_indices(indices, test_data->num_data_points);
+    shuffle_indices(indices, training_data->num_data_points);
 
     // then for each epoch we need to run n batches where n = number of data points / batch size
     // this gives us a little under 1 epoch -- could use some optimising to get closer or equal to 1 epoch
@@ -318,13 +325,13 @@ int stochastic_gradient_descent_train(Network *network, NetworkTestData *test_da
 
         // insert the current test data point into the network inputs
         // memcpy(void *dst, const void *src, size_t n)
-        memcpy(network->inputs->neuron_values, test_data->inputs[index], sizeof(double) * network->num_inputs);
+        memcpy(network->inputs->neuron_values, training_data->inputs[index], sizeof(double) * network->num_inputs);
 
         // evaluate the network
         evaluate_network(network);
 
         // then back propagate
-        back_propogate(network, test_data->outputs[index], costmap);
+        back_propogate(network, training_data->outputs[index], costmap);
       }
 
       // once the batch has been trained just apply the costmap

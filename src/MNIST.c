@@ -171,7 +171,7 @@ void free_image_data(ImageData *image_data) {
   free(image_data);
 }
 
-NetworkTestData* convert_to_network_data(ImageData *image_data) {
+NetworkTrainingData* convert_to_network_data(ImageData *image_data) {
 
   size_t image_data_size = image_data->num_images * IMAGE_SIZE * (sizeof(double) / sizeof(uint8_t));
   printf("Allocating %lu bytes of image data.\n", image_data_size);
@@ -223,15 +223,15 @@ NetworkTestData* convert_to_network_data(ImageData *image_data) {
 
   // all of the data has been converted safely
   // now just convert to ai training data struct
-  NetworkTestData *test_data = malloc(sizeof(NetworkTestData));
+  NetworkTrainingData *training_data = malloc(sizeof(NetworkTrainingData));
 
-  test_data->num_data_points = image_data->num_images;
-  test_data->input_length = IMAGE_SIZE;
-  test_data->output_length = NUM_OUPUTS;
-  test_data->inputs = converted_image_data;
-  test_data->outputs = label_data;
+  training_data->num_data_points = image_data->num_images;
+  training_data->input_length = IMAGE_SIZE;
+  training_data->output_length = NUM_OUPUTS;
+  training_data->inputs = converted_image_data;
+  training_data->outputs = label_data;
 
-  return test_data;
+  return training_data;
 
 }
 
@@ -243,7 +243,7 @@ void free_image_training_data(double **data, int num_data_points) {
 }
 
 
-void MNIST_test_network(Network *network, NetworkTestData *test_data, ImageData *image_data) {
+void MNIST_test_network(Network *network, NetworkTrainingData *training_data, ImageData *image_data) {
 
   int i = 0;
   while(i < image_data->num_images - 1) {
@@ -259,7 +259,7 @@ void MNIST_test_network(Network *network, NetworkTestData *test_data, ImageData 
 
     // get the networks prediction
     // feed the data in
-    memcpy(network->inputs->neuron_values, test_data->inputs[i], sizeof(double) * network->num_inputs);
+    memcpy(network->inputs->neuron_values, training_data->inputs[i], sizeof(double) * network->num_inputs);
 
     // evaluate the network
     evaluate_network(network);

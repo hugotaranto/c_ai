@@ -40,4 +40,3 @@ if(CMAKE_BUILD_TYPE STREQUAL "Debug")
   target_compile_options(proj PRIVATE -fsanitize=address)
   target_link_options(proj PRIVATE -fsanitize=address)
 endif()
-

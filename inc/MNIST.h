@@ -29,10 +29,10 @@ void print_all_images(ImageData *image_data);
 
 void free_image_data(ImageData *image_data);
 
-NetworkTestData* convert_to_network_data(ImageData *image_data);
+NetworkTrainingData* convert_to_network_data(ImageData *image_data);
 void free_image_training_data(double **data, int num_data_points);
 
-void MNIST_test_network(Network *network, NetworkTestData *test_data, ImageData *image_data);
+void MNIST_test_network(Network *network, NetworkTrainingData *training_data, ImageData *image_data);
 
 
 #endif

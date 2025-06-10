@@ -12,7 +12,7 @@ typedef struct Network Network;
 typedef struct Layer Layer;
 typedef struct CostMap CostMap;
 typedef struct CostMapLayer CostMapLayer;
-typedef struct NetworkTestData NetworkTestData;
+typedef struct NetworkTrainingData NetworkTrainingData;
 
 struct Layer {
   double * neuron_values;
@@ -66,7 +66,7 @@ struct CostMapLayer {
   double *cost_derivative_of_values;
 };
 
-struct NetworkTestData {
+struct NetworkTrainingData {
   int num_data_points;
   int input_length;
   double **inputs;
@@ -99,7 +99,7 @@ void free_cost_map_layer(CostMapLayer *layer);
 int apply_cost_map(Network *network, CostMap *costmap, double learning_rate);
 
 void gradient_descent_train(Network *network, double **inputs, double **expected_outputs, int num_inputs, double learning_rate);
-int stochastic_gradient_descent_train(Network *network, NetworkTestData *test_data, int batch_size, int epoch_count, double learning_rate);
+int stochastic_gradient_descent_train(Network *network, NetworkTrainingData *training_data, int batch_size, int epoch_count, double learning_rate);
 
 void swap(int *a, int *b);
 void shuffle_indices(int *indices, int num_indices);
