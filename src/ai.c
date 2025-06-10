@@ -266,6 +266,97 @@ void gradient_descent_train(Network *network, double **inputs, double **expected
 }
 
 
+int stochastic_gradient_descent_train(Network *network, NetworkTestData *test_data, int batch_size, int epoch_count, double learning_rate) {
+
+  if (batch_size > test_data->num_data_points) {
+    perror("Batch Size Bigger Than Data Set");
+    return -1;
+  }
+  if (batch_size <= 0) {
+    perror("Batch Size Cannot Be less than 1");
+    return -1;
+  }
+
+  // need to randomly select batch_size amount of test data points
+  // then gradient descent train on that
+  // then repeat for the number of epochs
+  
+  // make the indice array
+  int *indices = malloc(sizeof(int) * test_data->num_data_points);
+  for(int i = 0; i < test_data->num_data_points; i++) {
+    indices[i] = i;
+  }
+
+  int batches_per_epoch = test_data->num_data_points / batch_size;
+
+  // create the costmap
+  CostMap *costmap = malloc(sizeof(CostMap));
+  initialise_cost_map(costmap, network);
+
+  // then loop through the number of epochs
+  for(int i = 0; i < epoch_count; i++) {
+    // shuffle the indices
+    shuffle_indices(indices, test_data->num_data_points);
+
+    // then for each epoch we need to run n batches where n = number of data points / batch size
+    // this gives us a little under 1 epoch -- could use some optimising to get closer or equal to 1 epoch
+
+
+    for(int k = 0; k < batches_per_epoch; k++) {
+
+      // create a new cost map
+      // CostMap *costmap = malloc(sizeof(CostMap));
+      // initialise_cost_map(costmap, network);
+
+      // reset the cost map
+      reset_cost_map(costmap);
+
+      int starting_index = k * batch_size;
+      for(int j = starting_index; j < (starting_index + batch_size); j++) {
+
+        int index = indices[j];
+
+        // insert the current test data point into the network inputs
+        // memcpy(void *dst, const void *src, size_t n)
+        memcpy(network->inputs->neuron_values, test_data->inputs[index], sizeof(double) * network->num_inputs);
+
+        // evaluate the network
+        evaluate_network(network);
+
+        // then back propagate
+        back_propogate(network, test_data->outputs[index], costmap);
+      }
+
+      // once the batch has been trained just apply the costmap
+      apply_cost_map(network, costmap, learning_rate);
+
+
+      // free the costmap ready for another batch
+      // free_cost_map(costmap);
+    }
+
+    printf("Cost Function Average After Epoch %d: %f\n", i + 1, costmap->cumulative_cost / costmap->num_iterations);
+  }
+  
+  free_cost_map(costmap);
+  free(indices);
+  return 0;
+}
+
+void swap(int *a, int *b) {
+  int temp = *a;
+  *a = *b;
+  *b = temp;
+}
+
+void shuffle_indices(int *indices, int num_indices) {
+  for(int i = 0; i < num_indices; i++) {
+    int j = rand() % (i + 1);
+    swap(&indices[i], &indices[j]);
+  }
+}
+
+
 void initialise_cost_map(CostMap *costmap, Network *network) {
 
   costmap->num_iterations = 0;
@@ -286,6 +377,18 @@ void initialise_cost_map(CostMap *costmap, Network *network) {
   initialise_cost_map_layer(&costmap->layers[costmap->num_layers - 2], costmap->hidden_layer_length, costmap->num_outputs);
   initialise_cost_map_layer(&costmap->layers[costmap->num_layers - 1], costmap->num_outputs, 0);
 
+}
+
+void reset_cost_map(CostMap *costmap) {
+  costmap->num_iterations = 0;
+  costmap->cumulative_cost = 0;
+
+  for(int i = 0; i < costmap->num_layers; i++) {
+    CostMapLayer *layer = &costmap->layers[i];
+    memset(layer->weights, 0, sizeof(double) * layer->num_outputs * layer->num_neurons);
+    memset(layer->biases, 0, sizeof(double) * layer->num_neurons);
+    memset(layer->cost_derivative_of_values, 0, sizeof(double) * layer->num_neurons);
+  }
 }
 
 void free_cost_map(CostMap *costmap) {
@@ -323,7 +426,7 @@ void initialise_cost_map_layer(CostMapLayer *layer, int num_neurons, int num_out
   // also very important that these start as 0
   memset(layer->biases, 0, sizeof(double) * num_neurons);
   layer->cost_derivative_of_values = malloc(sizeof(double) * num_neurons);
-  layer->dvdz = malloc(sizeof(double) * num_neurons);
+  memset(layer->cost_derivative_of_values, 0, sizeof(double) * num_neurons);
 }
 
 void free_cost_map_layer(CostMapLayer *layer) {
