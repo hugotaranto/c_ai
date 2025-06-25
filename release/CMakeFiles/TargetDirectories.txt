@@ -1,6 +1,0 @@
-/Users/hugotaranto/Desktop/everyting/programming/c/ai_stuff/ai/release/CMakeFiles/proj.dir
-/Users/hugotaranto/Desktop/everyting/programming/c/ai_stuff/ai/release/CMakeFiles/edit_cache.dir
-/Users/hugotaranto/Desktop/everyting/programming/c/ai_stuff/ai/release/CMakeFiles/rebuild_cache.dir
-/Users/hugotaranto/Desktop/everyting/programming/c/ai_stuff/ai/release/modules/c_dynamic_string/CMakeFiles/dynamic_string.dir
-/Users/hugotaranto/Desktop/everyting/programming/c/ai_stuff/ai/release/modules/c_dynamic_string/CMakeFiles/edit_cache.dir
-/Users/hugotaranto/Desktop/everyting/programming/c/ai_stuff/ai/release/modules/c_dynamic_string/CMakeFiles/rebuild_cache.dir
