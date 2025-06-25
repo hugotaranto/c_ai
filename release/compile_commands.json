@@ -1,0 +1,50 @@
+[
+{
+  "directory": "/Users/hugotaranto/Desktop/everyting/programming/c/ai_stuff/ai/release",
+  "command": "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/cc  -I/Users/hugotaranto/Desktop/everyting/programming/c/ai_stuff/ai/inc -I/opt/homebrew/Cellar/openblas/0.3.29/include -I/Users/hugotaranto/Desktop/everyting/programming/c/ai_stuff/ai/test/inc -I/Users/hugotaranto/Desktop/everyting/programming/c/ai_stuff/ai/modules/c_dynamic_string/inc -I/opt/flex/flex-2.6.4/include -I/opt/bison/bison-3.7.91/share/include -O3 -DNDEBUG -std=gnu99 -arch arm64 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.5.sdk -o CMakeFiles/proj.dir/src/GradientMap.c.o -c /Users/hugotaranto/Desktop/everyting/programming/c/ai_stuff/ai/src/GradientMap.c",
+  "file": "/Users/hugotaranto/Desktop/everyting/programming/c/ai_stuff/ai/src/GradientMap.c",
+  "output": "CMakeFiles/proj.dir/src/GradientMap.c.o"
+},
+{
+  "directory": "/Users/hugotaranto/Desktop/everyting/programming/c/ai_stuff/ai/release",
+  "command": "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/cc  -I/Users/hugotaranto/Desktop/everyting/programming/c/ai_stuff/ai/inc -I/opt/homebrew/Cellar/openblas/0.3.29/include -I/Users/hugotaranto/Desktop/everyting/programming/c/ai_stuff/ai/test/inc -I/Users/hugotaranto/Desktop/everyting/programming/c/ai_stuff/ai/modules/c_dynamic_string/inc -I/opt/flex/flex-2.6.4/include -I/opt/bison/bison-3.7.91/share/include -O3 -DNDEBUG -std=gnu99 -arch arm64 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.5.sdk -o CMakeFiles/proj.dir/src/Network.c.o -c /Users/hugotaranto/Desktop/everyting/programming/c/ai_stuff/ai/src/Network.c",
+  "file": "/Users/hugotaranto/Desktop/everyting/programming/c/ai_stuff/ai/src/Network.c",
+  "output": "CMakeFiles/proj.dir/src/Network.c.o"
+},
+{
+  "directory": "/Users/hugotaranto/Desktop/everyting/programming/c/ai_stuff/ai/release",
+  "command": "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/cc  -I/Users/hugotaranto/Desktop/everyting/programming/c/ai_stuff/ai/inc -I/opt/homebrew/Cellar/openblas/0.3.29/include -I/Users/hugotaranto/Desktop/everyting/programming/c/ai_stuff/ai/test/inc -I/Users/hugotaranto/Desktop/everyting/programming/c/ai_stuff/ai/modules/c_dynamic_string/inc -I/opt/flex/flex-2.6.4/include -I/opt/bison/bison-3.7.91/share/include -O3 -DNDEBUG -std=gnu99 -arch arm64 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.5.sdk -o CMakeFiles/proj.dir/src/Training.c.o -c /Users/hugotaranto/Desktop/everyting/programming/c/ai_stuff/ai/src/Training.c",
+  "file": "/Users/hugotaranto/Desktop/everyting/programming/c/ai_stuff/ai/src/Training.c",
+  "output": "CMakeFiles/proj.dir/src/Training.c.o"
+},
+{
+  "directory": "/Users/hugotaranto/Desktop/everyting/programming/c/ai_stuff/ai/release",
+  "command": "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/cc  -I/Users/hugotaranto/Desktop/everyting/programming/c/ai_stuff/ai/inc -I/opt/homebrew/Cellar/openblas/0.3.29/include -I/Users/hugotaranto/Desktop/everyting/programming/c/ai_stuff/ai/test/inc -I/Users/hugotaranto/Desktop/everyting/programming/c/ai_stuff/ai/modules/c_dynamic_string/inc -I/opt/flex/flex-2.6.4/include -I/opt/bison/bison-3.7.91/share/include -O3 -DNDEBUG -std=gnu99 -arch arm64 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.5.sdk -o CMakeFiles/proj.dir/src/UtilAi.c.o -c /Users/hugotaranto/Desktop/everyting/programming/c/ai_stuff/ai/src/UtilAi.c",
+  "file": "/Users/hugotaranto/Desktop/everyting/programming/c/ai_stuff/ai/src/UtilAi.c",
+  "output": "CMakeFiles/proj.dir/src/UtilAi.c.o"
+},
+{
+  "directory": "/Users/hugotaranto/Desktop/everyting/programming/c/ai_stuff/ai/release",
+  "command": "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/cc  -I/Users/hugotaranto/Desktop/everyting/programming/c/ai_stuff/ai/inc -I/opt/homebrew/Cellar/openblas/0.3.29/include -I/Users/hugotaranto/Desktop/everyting/programming/c/ai_stuff/ai/test/inc -I/Users/hugotaranto/Desktop/everyting/programming/c/ai_stuff/ai/modules/c_dynamic_string/inc -I/opt/flex/flex-2.6.4/include -I/opt/bison/bison-3.7.91/share/include -O3 -DNDEBUG -std=gnu99 -arch arm64 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.5.sdk -o CMakeFiles/proj.dir/test/src/MNIST.c.o -c /Users/hugotaranto/Desktop/everyting/programming/c/ai_stuff/ai/test/src/MNIST.c",
+  "file": "/Users/hugotaranto/Desktop/everyting/programming/c/ai_stuff/ai/test/src/MNIST.c",
+  "output": "CMakeFiles/proj.dir/test/src/MNIST.c.o"
+},
+{
+  "directory": "/Users/hugotaranto/Desktop/everyting/programming/c/ai_stuff/ai/release",
+  "command": "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/cc  -I/Users/hugotaranto/Desktop/everyting/programming/c/ai_stuff/ai/inc -I/opt/homebrew/Cellar/openblas/0.3.29/include -I/Users/hugotaranto/Desktop/everyting/programming/c/ai_stuff/ai/test/inc -I/Users/hugotaranto/Desktop/everyting/programming/c/ai_stuff/ai/modules/c_dynamic_string/inc -I/opt/flex/flex-2.6.4/include -I/opt/bison/bison-3.7.91/share/include -O3 -DNDEBUG -std=gnu99 -arch arm64 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.5.sdk -o CMakeFiles/proj.dir/test/src/main.c.o -c /Users/hugotaranto/Desktop/everyting/programming/c/ai_stuff/ai/test/src/main.c",
+  "file": "/Users/hugotaranto/Desktop/everyting/programming/c/ai_stuff/ai/test/src/main.c",
+  "output": "CMakeFiles/proj.dir/test/src/main.c.o"
+},
+{
+  "directory": "/Users/hugotaranto/Desktop/everyting/programming/c/ai_stuff/ai/release",
+  "command": "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/cc  -I/Users/hugotaranto/Desktop/everyting/programming/c/ai_stuff/ai/inc -I/opt/homebrew/Cellar/openblas/0.3.29/include -I/Users/hugotaranto/Desktop/everyting/programming/c/ai_stuff/ai/test/inc -I/Users/hugotaranto/Desktop/everyting/programming/c/ai_stuff/ai/modules/c_dynamic_string/inc -I/opt/flex/flex-2.6.4/include -I/opt/bison/bison-3.7.91/share/include -O3 -DNDEBUG -std=gnu99 -arch arm64 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.5.sdk -o CMakeFiles/proj.dir/test/src/xor.c.o -c /Users/hugotaranto/Desktop/everyting/programming/c/ai_stuff/ai/test/src/xor.c",
+  "file": "/Users/hugotaranto/Desktop/everyting/programming/c/ai_stuff/ai/test/src/xor.c",
+  "output": "CMakeFiles/proj.dir/test/src/xor.c.o"
+},
+{
+  "directory": "/Users/hugotaranto/Desktop/everyting/programming/c/ai_stuff/ai/release/modules/c_dynamic_string",
+  "command": "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/cc  -I/Users/hugotaranto/Desktop/everyting/programming/c/ai_stuff/ai/modules/c_dynamic_string/inc -I/opt/flex/flex-2.6.4/include -I/opt/bison/bison-3.7.91/share/include -O3 -DNDEBUG -std=gnu99 -arch arm64 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.5.sdk -o CMakeFiles/dynamic_string.dir/src/dynamic_string.c.o -c /Users/hugotaranto/Desktop/everyting/programming/c/ai_stuff/ai/modules/c_dynamic_string/src/dynamic_string.c",
+  "file": "/Users/hugotaranto/Desktop/everyting/programming/c/ai_stuff/ai/modules/c_dynamic_string/src/dynamic_string.c",
+  "output": "modules/c_dynamic_string/CMakeFiles/dynamic_string.dir/src/dynamic_string.c.o"
+}
+]

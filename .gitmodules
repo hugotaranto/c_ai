@@ -1,0 +1,3 @@
+[submodule "modules/c_dynamic_string"]
+	path = modules/c_dynamic_string
+	url = https://github.com/hugotaranto/c_dynamic_string.git
